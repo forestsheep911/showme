@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import './App.css'
+import '@/App.css'
 
 function App() {
   const [fontSize, setFontSize] = useState(120)

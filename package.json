@@ -2,28 +2,36 @@
   "name": "showme",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "type": "commonjs",
+  "main": "dist/functions/serveStatic/index.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "build": "tsc -b && vite build && copyfiles -f \"src/functions/serveStatic/function.json\" \"src/functions/serveStatic/package.json\" \"host.json\" \"local.settings.json\" dist/functions/serveStatic",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "func:build": "tsc --build tsconfig.functions.json",
+    "func:start": "npm run func:build && npm run build && cd dist/functions && npm install && cd ../.. && func start --script-root dist/functions --verbose",
+    "predeploy": "rimraf dist && npm run func:build && npm run build",
+    "deploy": "npm run predeploy && func azure functionapp publish shwome777"
   },
   "dependencies": {
+    "@azure/functions": "^4.0.7030",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.22.0",
-    "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.4",
-    "@vitejs/plugin-react-swc": "^3.8.0",
-    "eslint": "^9.22.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
-    "globals": "^16.0.0",
-    "typescript": "~5.7.2",
-    "typescript-eslint": "^8.26.1",
-    "vite": "^6.3.1"
+    "@types/node": "^20.11.24",
+    "@types/react": "^18.2.56",
+    "@types/react-dom": "^18.2.19",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
+    "@vitejs/plugin-react-swc": "^3.5.0",
+    "copyfiles": "^2.4.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.4"
   }
 }
