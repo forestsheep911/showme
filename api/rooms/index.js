@@ -100,6 +100,10 @@ function controllerConnected(room) {
 }
 
 function getBearerToken(req) {
+  const customToken = req.headers['x-showme-control-token'] || req.headers['X-ShowMe-Control-Token']
+
+  if (typeof customToken === 'string') return customToken.trim()
+
   const header = req.headers.authorization || req.headers.Authorization
 
   if (typeof header !== 'string' || !header.startsWith('Bearer ')) return ''

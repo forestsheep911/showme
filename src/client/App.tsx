@@ -606,7 +606,7 @@ function ControlRoomMode({ roomId }: { roomId: string }) {
         const response = await apiRequest<{ state: RoomState }>(`/api/rooms/${roomId}`, {
           method: 'PATCH',
           headers: {
-            Authorization: `Bearer ${token}`,
+            'x-showme-control-token': token,
           },
           body: JSON.stringify({ state }),
         })

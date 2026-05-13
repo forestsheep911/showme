@@ -138,6 +138,10 @@ function getControllerConnected(room: Room) {
 }
 
 function getBearerToken(req: IncomingMessage) {
+  const customToken = req.headers['x-showme-control-token'];
+
+  if (typeof customToken === 'string') return customToken.trim();
+
   const header = req.headers.authorization;
 
   if (!header?.startsWith('Bearer ')) return '';

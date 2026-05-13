@@ -163,7 +163,7 @@ type GetRoomResponse = {
 请求头：
 
 ```text
-Authorization: Bearer <controlToken>
+x-showme-control-token: <controlToken>
 ```
 
 请求：
