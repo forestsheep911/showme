@@ -81,7 +81,7 @@ const darkModeColors: ColorOption[] = [
   { label: '浅玫瑰', value: '#fecdd3' },
 ]
 
-const placeholderText = '输入要给孩子看的字、词或短文'
+const placeholderText = '输入要展示的内容'
 const defaultState: RoomState = {
   text: '',
   fontSize: 120,
@@ -267,7 +267,10 @@ function EditorPanel({
         spellCheck={false}
         inputMode="text"
         enterKeyHint="done"
-        name="showme-copy-text"
+        name="showme-display-text"
+        data-1p-ignore="true"
+        data-form-type="other"
+        data-lpignore="true"
         rows={4}
       />
     </section>
@@ -710,9 +713,16 @@ function ControlPairMode() {
             value={formatPairCode(pairCode)}
             onChange={(event) => setPairCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
             inputMode="numeric"
-            autoComplete="one-time-code"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            name="showme-pair-code"
             placeholder="482 913"
             aria-label="配对码"
+            data-1p-ignore="true"
+            data-form-type="other"
+            data-lpignore="true"
           />
           <button className="primary-action wide" type="button" onClick={pairRoom} disabled={isSubmitting}>
             {isSubmitting ? '连接中' : '连接'}
@@ -925,9 +935,9 @@ function ControlRoomMode({ roomId }: { roomId: string }) {
         重新配对
       </button>
       <main className="control-page">
-        <section className="controller-card" aria-label="手机控制器">
-          <p className="eyebrow">手机控制器</p>
-          <h1>输入给孩子看的内容</h1>
+        <section className="controller-card" aria-label="展示控制">
+          <p className="eyebrow">展示控制</p>
+          <h1>输入展示内容</h1>
           <EditorPanel text={state.text} onTextChange={(text) => updateState({ text })} />
           <div className="controller-actions">
             <button className="tool-button" type="button" onClick={() => updateState({ text: '' })}>
