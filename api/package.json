@@ -2,5 +2,8 @@
   "name": "showme-api",
   "version": "0.0.0",
   "private": true,
-  "type": "commonjs"
+  "type": "commonjs",
+  "dependencies": {
+    "@azure/data-tables": "^13.3.1"
+  }
 }
