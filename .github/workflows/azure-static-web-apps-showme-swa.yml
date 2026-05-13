@@ -24,4 +24,3 @@ jobs:
           api_location: api
           output_location: dist
           app_build_command: npm run build
-          skip_api_build: true
