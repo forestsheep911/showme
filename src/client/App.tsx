@@ -1,6 +1,48 @@
 import { useState, useEffect, useRef } from 'react'
 import '@/App.css'
 
+// 字体大小档位
+const fontSizeLevels = [
+  { label: '特大', size: 200 },
+  { label: '大', size: 160 },
+  { label: '中', size: 120 },
+  { label: '小', size: 80 },
+  { label: '特小', size: 40 }
+]
+
+// 字体选项
+const fontFamilyOptions = [
+  { label: '思源黑体', value: 'Noto Sans SC' },
+  { label: '思源宋体', value: 'Noto Serif SC' },
+  { label: '日文字体', value: 'Noto Sans JP' },
+  { label: '韩文字体', value: 'Noto Sans KR' },
+  { label: '繁体中文', value: 'Noto Sans TC' }
+]
+
+// 亮色主题颜色选项
+const lightModeColors = [
+  { label: '黑色', value: '#000000' },
+  { label: '深蓝', value: '#1e40af' },
+  { label: '玫红', value: '#e11d48' },
+  { label: '翠绿', value: '#059669' },
+  { label: '紫色', value: '#7c3aed' },
+  { label: '橙色', value: '#ea580c' },
+  { label: '天蓝', value: '#0284c7' },
+  { label: '玫瑰', value: '#be185d' }
+]
+
+// 暗色主题颜色选项
+const darkModeColors = [
+  { label: '白色', value: '#ffffff' },
+  { label: '浅蓝', value: '#93c5fd' },
+  { label: '粉红', value: '#fda4af' },
+  { label: '薄荷', value: '#6ee7b7' },
+  { label: '淡紫', value: '#c4b5fd' },
+  { label: '杏色', value: '#fdba74' },
+  { label: '天青', value: '#7dd3fc' },
+  { label: '浅玫瑰', value: '#fecdd3' }
+]
+
 function App() {
   const [fontSize, setFontSize] = useState(120)
   const [fontFamily, setFontFamily] = useState('Noto Sans SC')
@@ -11,48 +53,6 @@ function App() {
   const containerRef = useRef<HTMLDivElement>(null)
   const settingsPanelRef = useRef<HTMLDivElement>(null)
   const settingsButtonRef = useRef<HTMLDivElement>(null)
-
-  // 字体大小档位
-  const fontSizeLevels = [
-    { label: '特大', size: 200 },
-    { label: '大', size: 160 },
-    { label: '中', size: 120 },
-    { label: '小', size: 80 },
-    { label: '特小', size: 40 }
-  ]
-
-  // 字体选项
-  const fontFamilyOptions = [
-    { label: '思源黑体', value: 'Noto Sans SC' },
-    { label: '思源宋体', value: 'Noto Serif SC' },
-    { label: '日文字体', value: 'Noto Sans JP' },
-    { label: '韩文字体', value: 'Noto Sans KR' },
-    { label: '繁体中文', value: 'Noto Sans TC' }
-  ]
-
-  // 亮色主题颜色选项
-  const lightModeColors = [
-    { label: '黑色', value: '#000000' },
-    { label: '深蓝', value: '#1e40af' },
-    { label: '玫红', value: '#e11d48' },
-    { label: '翠绿', value: '#059669' },
-    { label: '紫色', value: '#7c3aed' },
-    { label: '橙色', value: '#ea580c' },
-    { label: '天蓝', value: '#0284c7' },
-    { label: '玫瑰', value: '#be185d' }
-  ]
-
-  // 暗色主题颜色选项
-  const darkModeColors = [
-    { label: '白色', value: '#ffffff' },
-    { label: '浅蓝', value: '#93c5fd' },
-    { label: '粉红', value: '#fda4af' },
-    { label: '薄荷', value: '#6ee7b7' },
-    { label: '淡紫', value: '#c4b5fd' },
-    { label: '杏色', value: '#fdba74' },
-    { label: '天青', value: '#7dd3fc' },
-    { label: '浅玫瑰', value: '#fecdd3' }
-  ]
 
   // 根据当前主题获取颜色选项
   const colorOptions = isDarkMode ? darkModeColors : lightModeColors
