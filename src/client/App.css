@@ -474,6 +474,36 @@
   width: 100%;
 }
 
+.tool-button.wide {
+  width: 100%;
+}
+
+.scanner-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #0f172a;
+  aspect-ratio: 4 / 3;
+}
+
+.scanner-video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.scanner-frame {
+  position: absolute;
+  inset: 15%;
+  border: 3px solid #f59e0b;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 999px rgba(15, 23, 42, 0.28),
+    0 0 28px rgba(245, 158, 11, 0.28);
+  pointer-events: none;
+}
+
 .controller-card .editor-panel,
 .controller-card .settings-sheet {
   border-color: rgba(15, 23, 42, 0.1);

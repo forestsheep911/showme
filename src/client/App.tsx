@@ -33,6 +33,16 @@ type Route =
   | { view: 'controlPair' }
   | { view: 'controlRoom'; roomId: string }
 
+type BarcodeDetectorConstructor = new (options?: { formats?: string[] }) => {
+  detect(source: CanvasImageSource): Promise<Array<{ rawValue: string }>>
+}
+
+declare global {
+  interface Window {
+    BarcodeDetector?: BarcodeDetectorConstructor
+  }
+}
+
 const fontSizeLevels: FontSizeLevel[] = [
   { label: '特大', size: 200 },
   { label: '大', size: 160 },
@@ -122,6 +132,28 @@ function getPairUrl(pairCode: string) {
   })
 
   return `${window.location.origin}${window.location.pathname}?${params.toString()}`
+}
+
+function isLikelyMobileDevice() {
+  return (
+    window.matchMedia('(pointer: coarse)').matches ||
+    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+  )
+}
+
+function extractPairCodeFromScan(rawValue: string) {
+  try {
+    const url = new URL(rawValue)
+    const pair = url.searchParams.get('pair')?.replace(/\D/g, '').slice(0, 6)
+
+    if (pair?.length === 6) return pair
+  } catch {
+    // Fall through to plain-code parsing.
+  }
+
+  const plainCode = rawValue.replace(/\D/g, '').slice(0, 6)
+
+  return plainCode.length === 6 ? plainCode : ''
 }
 
 async function apiRequest<T>(url: string, options?: RequestInit) {
@@ -618,9 +650,15 @@ function ControlPairMode() {
   const [pairCode, setPairCode] = useState(initialPairCode)
   const [status, setStatus] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
+  const [isMobileDevice, setIsMobileDevice] = useState(false)
   const autoPairAttemptedRef = useRef(false)
 
   useBodyTheme(false)
+
+  useEffect(() => {
+    setIsMobileDevice(isLikelyMobileDevice())
+  }, [])
 
   async function pairRoom() {
     const normalized = pairCode.replace(/\D/g, '')
@@ -679,9 +717,141 @@ function ControlPairMode() {
           <button className="primary-action wide" type="button" onClick={pairRoom} disabled={isSubmitting}>
             {isSubmitting ? '连接中' : '连接'}
           </button>
+          {isMobileDevice && (
+            <button
+              className="tool-button wide"
+              type="button"
+              onClick={() => setShowScanner((current) => !current)}
+            >
+              {showScanner ? '关闭扫码' : '扫码连接'}
+            </button>
+          )}
+          {showScanner && (
+            <QrScannerPanel
+              onResult={(code) => {
+                setPairCode(code)
+                setShowScanner(false)
+              }}
+              onStatus={setStatus}
+            />
+          )}
           {status && <p className="status-text">{status}</p>}
         </section>
       </main>
+    </div>
+  )
+}
+
+function QrScannerPanel({
+  onResult,
+  onStatus,
+}: {
+  onResult: (pairCode: string) => void
+  onStatus: (status: string) => void
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    let animationFrame = 0
+    let stream: MediaStream | undefined
+    let jsQrDecoder:
+      | ((data: Uint8ClampedArray, width: number, height: number) => { data: string } | null)
+      | undefined
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d', { willReadFrequently: true })
+
+    async function startScanner() {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        onStatus('当前浏览器不支持摄像头扫码')
+        return
+      }
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: 'environment' },
+          },
+          audio: false,
+        })
+
+        if (cancelled || !videoRef.current) return
+
+        videoRef.current.srcObject = stream
+        await videoRef.current.play()
+        onStatus('请将大屏二维码放入取景框')
+        scanFrame()
+      } catch {
+        onStatus('无法打开摄像头，请检查浏览器权限')
+      }
+    }
+
+    async function scanFrame() {
+      const video = videoRef.current
+
+      if (cancelled || !video || !context || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+        animationFrame = window.requestAnimationFrame(scanFrame)
+        return
+      }
+
+      const width = video.videoWidth
+      const height = video.videoHeight
+
+      if (width === 0 || height === 0) {
+        animationFrame = window.requestAnimationFrame(scanFrame)
+        return
+      }
+
+      canvas.width = width
+      canvas.height = height
+      context.drawImage(video, 0, 0, width, height)
+
+      let rawValue = ''
+
+      if (window.BarcodeDetector) {
+        try {
+          const detector = new window.BarcodeDetector({ formats: ['qr_code'] })
+          const codes = await detector.detect(canvas)
+          rawValue = codes[0]?.rawValue ?? ''
+        } catch {
+          rawValue = ''
+        }
+      }
+
+      if (!rawValue) {
+        if (!jsQrDecoder) {
+          const module = await import('jsqr')
+          jsQrDecoder = module.default
+        }
+
+        const imageData = context.getImageData(0, 0, width, height)
+        rawValue = jsQrDecoder(imageData.data, imageData.width, imageData.height)?.data ?? ''
+      }
+
+      const pairCode = rawValue ? extractPairCodeFromScan(rawValue) : ''
+
+      if (pairCode) {
+        onStatus('已识别二维码，正在连接...')
+        onResult(pairCode)
+        return
+      }
+
+      animationFrame = window.requestAnimationFrame(scanFrame)
+    }
+
+    startScanner()
+
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(animationFrame)
+      stream?.getTracks().forEach((track) => track.stop())
+    }
+  }, [onResult, onStatus])
+
+  return (
+    <div className="scanner-panel" aria-label="扫码连接">
+      <video ref={videoRef} className="scanner-video" muted playsInline />
+      <div className="scanner-frame" />
     </div>
   )
 }
