@@ -27,6 +27,7 @@ type RoomState = {
 }
 
 type Route =
+  | { view: 'home' }
   | { view: 'local' }
   | { view: 'display' }
   | { view: 'controlPair' }
@@ -85,10 +86,11 @@ function parseRoute(): Route {
   const controlRoomId = params.get('control')
 
   if (controlRoomId) return { view: 'controlRoom', roomId: controlRoomId }
+  if (params.get('mode') === 'local') return { view: 'local' }
   if (params.get('mode') === 'display') return { view: 'display' }
   if (params.get('mode') === 'control') return { view: 'controlPair' }
 
-  return { view: 'local' }
+  return { view: 'home' }
 }
 
 function navigateTo(search: string) {
@@ -145,17 +147,20 @@ function DisplayStage({
   fontFamily,
   textColor,
   isDarkMode,
+  emptyText = placeholderText,
 }: {
   text: string
   fontSize: number
   fontFamily: string
   textColor: string
   isDarkMode: boolean
+  emptyText?: string
 }) {
-  const displayText = text.trim().length > 0 ? text : placeholderText
+  const hasText = text.trim().length > 0
+  const displayText = hasText ? text : emptyText
   const displayMode = getDisplayMode(text)
   const displayFontSize =
-    text.trim().length === 0
+    !hasText
       ? 'clamp(2rem, 7vw, 88px)'
       : displayMode === 'passage'
         ? `clamp(1.75rem, ${Math.max(fontSize / 18, 4.5)}vw, ${Math.min(fontSize, 96)}px)`
@@ -166,7 +171,7 @@ function DisplayStage({
       <div
         className={`display-text ${displayMode} ${text.trim().length === 0 ? 'placeholder' : ''}`}
         style={{
-          color: text.trim().length > 0 ? textColor : isDarkMode ? '#94a3b8' : '#9ca3af',
+          color: hasText ? textColor : isDarkMode ? '#94a3b8' : '#9ca3af',
           fontFamily,
           fontSize: displayFontSize,
         }}
@@ -374,6 +379,25 @@ function ModeLauncher() {
   )
 }
 
+function HomeMode() {
+  useBodyTheme(false)
+
+  return (
+    <div className="app-container light-mode">
+      <main className="home-page" aria-label="ShowMe 入口">
+        <section className="home-actions">
+          <button className="home-action primary" type="button" onClick={() => navigateTo('?mode=display')}>
+            新建展示房间
+          </button>
+          <button className="home-action" type="button" onClick={() => navigateTo('?mode=control')}>
+            连接展示屏
+          </button>
+        </section>
+      </main>
+    </div>
+  )
+}
+
 function LocalMode() {
   const [state, setState] = useState<RoomState>(defaultState)
   const [showSettings, setShowSettings] = useState(false)
@@ -448,6 +472,7 @@ function DisplayRoomMode() {
   const [pairCode, setPairCode] = useState('')
   const [pairCodeExpiresAt, setPairCodeExpiresAt] = useState('')
   const [controllerConnected, setControllerConnected] = useState(false)
+  const [hasControllerEverConnected, setHasControllerEverConnected] = useState(false)
   const [state, setState] = useState<RoomState>(defaultState)
   const [status, setStatus] = useState('正在创建展示房间...')
   const [pairQrCode, setPairQrCode] = useState('')
@@ -501,6 +526,9 @@ function DisplayRoomMode() {
 
         setState(response.state)
         setControllerConnected(response.controllerConnected)
+        if (response.controllerConnected) {
+          setHasControllerEverConnected(true)
+        }
         setStatus(response.controllerConnected ? '手机已连接' : '等待手机连接')
       } catch (error) {
         if (!cancelled) setStatus(error instanceof Error ? error.message : '同步失败')
@@ -556,9 +584,10 @@ function DisplayRoomMode() {
         fontFamily={state.fontFamily}
         textColor={state.textColor}
         isDarkMode={state.isDarkMode}
+        emptyText=""
       />
 
-      {!controllerConnected && (
+      {!hasControllerEverConnected && (
         <section className="pairing-card" aria-label="展示房间配对码">
           <div className="pairing-layout">
             <div>
@@ -579,7 +608,7 @@ function DisplayRoomMode() {
         </section>
       )}
 
-      {controllerConnected && <div className="sync-badge">手机已连接</div>}
+      {hasControllerEverConnected && <div className="sync-badge">{controllerConnected ? '手机已连接' : '显示中'}</div>}
     </div>
   )
 }
@@ -803,8 +832,9 @@ function App() {
   if (route.view === 'display') return <DisplayRoomMode />
   if (route.view === 'controlPair') return <ControlPairMode />
   if (route.view === 'controlRoom') return <ControlRoomMode roomId={route.roomId} />
+  if (route.view === 'local') return <LocalMode />
 
-  return <LocalMode />
+  return <HomeMode />
 }
 
 export default App

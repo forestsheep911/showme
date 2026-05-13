@@ -35,7 +35,7 @@
   letter-spacing: 0;
   font-weight: 500;
   text-wrap: balance;
-  scrollbar-width: thin;
+  scrollbar-width: none;
 }
 
 .display-text.single {
@@ -59,7 +59,9 @@
 }
 
 .display-text::-webkit-scrollbar {
-  width: 8px;
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .display-text::-webkit-scrollbar-thumb {
@@ -69,6 +71,42 @@
 
 .dark-mode .display-text::-webkit-scrollbar-thumb {
   background: rgba(248, 250, 252, 0.22);
+}
+
+.home-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: max(20px, env(safe-area-inset-top)) clamp(18px, 5vw, 64px)
+    max(20px, env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+}
+
+.home-actions {
+  width: min(100%, 760px);
+  display: grid;
+  gap: clamp(16px, 4vw, 28px);
+}
+
+.home-action {
+  min-height: clamp(96px, 20vh, 180px);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  padding: clamp(18px, 5vw, 34px);
+  color: #111827;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+  font: inherit;
+  font-size: clamp(2rem, 7vw, 4.5rem);
+  font-weight: 800;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.home-action.primary {
+  color: #ffffff;
+  border-color: #2563eb;
+  background: #2563eb;
 }
 
 .control-surface {
