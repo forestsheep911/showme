@@ -1,3 +1,4 @@
+import QRCode from 'qrcode'
 import { useEffect, useRef, useState } from 'react'
 import '@/App.css'
 
@@ -109,6 +110,16 @@ function formatPairCode(pairCode: string) {
   if (normalized.length <= 3) return normalized
 
   return `${normalized.slice(0, 3)} ${normalized.slice(3)}`
+}
+
+function getPairUrl(pairCode: string) {
+  const normalized = pairCode.replace(/\D/g, '').slice(0, 6)
+  const params = new URLSearchParams({
+    mode: 'control',
+    pair: normalized,
+  })
+
+  return `${window.location.origin}${window.location.pathname}?${params.toString()}`
 }
 
 async function apiRequest<T>(url: string, options?: RequestInit) {
@@ -413,6 +424,7 @@ function DisplayRoomMode() {
   const [controllerConnected, setControllerConnected] = useState(false)
   const [state, setState] = useState<RoomState>(defaultState)
   const [status, setStatus] = useState('正在创建展示房间...')
+  const [pairQrCode, setPairQrCode] = useState('')
 
   useBodyTheme(state.isDarkMode)
 
@@ -478,6 +490,35 @@ function DisplayRoomMode() {
     }
   }, [roomId])
 
+  useEffect(() => {
+    if (!pairCode) {
+      setPairQrCode('')
+      return undefined
+    }
+
+    let cancelled = false
+
+    QRCode.toDataURL(getPairUrl(pairCode), {
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 220,
+      color: {
+        dark: '#0f172a',
+        light: '#ffffff',
+      },
+    })
+      .then((url) => {
+        if (!cancelled) setPairQrCode(url)
+      })
+      .catch(() => {
+        if (!cancelled) setPairQrCode('')
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [pairCode])
+
   return (
     <div className={`app-container ${state.isDarkMode ? 'dark-mode' : 'light-mode'}`}>
       <button className="back-button" type="button" onClick={() => navigateTo('')}>
@@ -493,10 +534,22 @@ function DisplayRoomMode() {
 
       {!controllerConnected && (
         <section className="pairing-card" aria-label="展示房间配对码">
-          <p className="eyebrow">手机打开 ShowMe，选择连接展示屏</p>
-          <div className="pair-code">{pairCode ? formatPairCode(pairCode) : '...'}</div>
-          <p>{status}</p>
-          {pairCodeExpiresAt && <p className="muted">配对码 10 分钟内有效</p>}
+          <div className="pairing-layout">
+            <div>
+              <p className="eyebrow">手机扫码自动连接，或手动输入配对码</p>
+              <div className="pair-code">{pairCode ? formatPairCode(pairCode) : '...'}</div>
+              <p>{status}</p>
+              {pairCodeExpiresAt && <p className="muted">配对码 10 分钟内有效</p>}
+            </div>
+            <div className="qr-panel" aria-label="手机扫码连接">
+              {pairQrCode ? (
+                <img src={pairQrCode} alt="扫码连接展示屏" />
+              ) : (
+                <div className="qr-placeholder">生成中</div>
+              )}
+              <p>手机扫码</p>
+            </div>
+          </div>
         </section>
       )}
 
@@ -506,9 +559,11 @@ function DisplayRoomMode() {
 }
 
 function ControlPairMode() {
-  const [pairCode, setPairCode] = useState('')
+  const initialPairCode = new URLSearchParams(window.location.search).get('pair')?.replace(/\D/g, '').slice(0, 6) ?? ''
+  const [pairCode, setPairCode] = useState(initialPairCode)
   const [status, setStatus] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const autoPairAttemptedRef = useRef(false)
 
   useBodyTheme(false)
 
@@ -540,6 +595,13 @@ function ControlPairMode() {
       setIsSubmitting(false)
     }
   }
+
+  useEffect(() => {
+    if (autoPairAttemptedRef.current || pairCode.length !== 6) return
+
+    autoPairAttemptedRef.current = true
+    pairRoom()
+  })
 
   return (
     <div className="app-container light-mode">

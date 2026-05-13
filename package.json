@@ -12,12 +12,14 @@
     "deploy": "npm run predeploy && swa deploy dist --api-location api --api-language node --api-version 20 --env production"
   },
   "dependencies": {
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@azure/static-web-apps-cli": "^2.0.9",
     "@types/node": "^20.11.24",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
     "@typescript-eslint/eslint-plugin": "^7.0.2",

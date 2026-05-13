@@ -285,11 +285,18 @@
   position: fixed;
   left: 50%;
   bottom: max(18px, env(safe-area-inset-bottom));
-  width: min(calc(100% - 28px), 620px);
+  width: min(calc(100% - 28px), 860px);
   transform: translateX(-50%);
   padding: 18px;
-  text-align: center;
   z-index: 20;
+}
+
+.pairing-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(16px, 4vw, 28px);
+  align-items: center;
+  text-align: left;
 }
 
 .eyebrow {
@@ -317,6 +324,39 @@
   font-weight: 800;
   line-height: 0.95;
   letter-spacing: 0;
+}
+
+.qr-panel {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.qr-panel img,
+.qr-placeholder {
+  width: clamp(132px, 20vw, 220px);
+  height: clamp(132px, 20vw, 220px);
+  border: 10px solid #ffffff;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.qr-placeholder {
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.qr-panel p {
+  color: #475569;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.dark-mode .qr-panel p {
+  color: #cbd5e1;
 }
 
 .dark-mode .pair-code {
@@ -507,6 +547,18 @@
 
   .pairing-card {
     padding: 14px;
+  }
+
+  .pairing-layout {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .qr-panel img,
+  .qr-placeholder {
+    width: 148px;
+    height: 148px;
   }
 }
 
