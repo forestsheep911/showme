@@ -425,17 +425,18 @@
 .control-page {
   min-height: 100vh;
   min-height: 100svh;
-  padding: calc(74px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));
+  padding: calc(64px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom));
   display: grid;
-  place-items: center;
+  align-items: start;
+  justify-items: center;
 }
 
 .pair-control-card,
 .controller-card {
   width: min(100%, 720px);
-  padding: clamp(18px, 4vw, 28px);
+  padding: clamp(12px, 3vw, 20px);
   display: grid;
-  gap: 14px;
+  gap: 10px;
   overflow: hidden;
 }
 
@@ -512,9 +513,9 @@
 
 .controller-card .editor-panel,
 .controller-card .settings-sheet {
-  border-color: rgba(15, 23, 42, 0.1);
+  border-color: rgba(15, 23, 42, 0.08);
   box-shadow: none;
-  background: rgba(248, 250, 252, 0.96);
+  background: rgba(248, 250, 252, 0.72);
 }
 
 .dark-mode .controller-card .editor-panel,
@@ -526,7 +527,26 @@
 .controller-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
+}
+
+.control-page .editor-panel {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.control-page .editor-textarea {
+  min-height: clamp(220px, 46svh, 420px);
+  max-height: clamp(220px, 52svh, 460px);
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(255, 255, 255, 0.86);
+  font-size: 20px;
+}
+
+.control-page .tool-button {
+  min-height: 42px;
+  font-size: 15px;
 }
 
 .settings-sheet {
@@ -614,14 +634,14 @@
   .pair-control-page,
   .control-page {
     align-items: start;
-    padding-top: calc(64px + env(safe-area-inset-top));
+    padding-top: calc(56px + env(safe-area-inset-top));
   }
 
   .pair-control-card,
   .controller-card {
     width: 100%;
-    padding: 16px;
-    gap: 12px;
+    padding: 12px;
+    gap: 10px;
   }
 
   .pair-control-card h1,
@@ -631,6 +651,11 @@
 
   .pair-input {
     height: 64px;
+  }
+
+  .control-page .editor-textarea {
+    min-height: clamp(240px, 50svh, 420px);
+    max-height: clamp(240px, 56svh, 460px);
   }
 
   .mode-launcher {

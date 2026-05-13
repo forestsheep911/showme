@@ -936,8 +936,6 @@ function ControlRoomMode({ roomId }: { roomId: string }) {
       </button>
       <main className="control-page">
         <section className="controller-card" aria-label="展示控制">
-          <p className="eyebrow">展示控制</p>
-          <h1>输入展示内容</h1>
           <EditorPanel text={state.text} onTextChange={(text) => updateState({ text })} />
           <div className="controller-actions">
             <button className="tool-button" type="button" onClick={() => updateState({ text: '' })}>
