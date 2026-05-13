@@ -23,3 +23,5 @@ local.settings.json
 *.njsproj
 *.sln
 *.sw?
+
+.env

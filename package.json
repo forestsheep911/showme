@@ -9,7 +9,7 @@
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "predeploy": "rimraf dist && npm run build",
-    "deploy": "npm run predeploy && swa deploy dist --env production"
+    "deploy": "npm run predeploy && swa deploy dist --api-location api --api-language node --api-version 20 --env production"
   },
   "dependencies": {
     "react": "^19.0.0",
