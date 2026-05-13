@@ -185,18 +185,44 @@ function EditorPanel({
   onTextChange: (value: string) => void
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const isComposingRef = useRef(false)
+  const [draftText, setDraftText] = useState(text)
 
   useEffect(() => {
     textareaRef.current?.focus()
   }, [])
+
+  useEffect(() => {
+    if (!isComposingRef.current) {
+      setDraftText(text)
+    }
+  }, [text])
 
   return (
     <section className="editor-panel" aria-label="编辑文字">
       <textarea
         ref={textareaRef}
         className="editor-textarea"
-        value={text}
-        onChange={(event) => onTextChange(event.target.value)}
+        value={draftText}
+        onChange={(event) => {
+          const nextText = event.target.value
+
+          setDraftText(nextText)
+
+          if (!isComposingRef.current) {
+            onTextChange(nextText)
+          }
+        }}
+        onCompositionStart={() => {
+          isComposingRef.current = true
+        }}
+        onCompositionEnd={(event) => {
+          const nextText = event.currentTarget.value
+
+          isComposingRef.current = false
+          setDraftText(nextText)
+          onTextChange(nextText)
+        }}
         placeholder={placeholderText}
         autoComplete="off"
         autoCorrect="off"
