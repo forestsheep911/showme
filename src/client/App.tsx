@@ -188,6 +188,7 @@ function DisplayStage({
   isDarkMode: boolean
   emptyText?: string
 }) {
+  const textRef = useRef<HTMLDivElement>(null)
   const hasText = text.trim().length > 0
   const displayText = hasText ? text : emptyText
   const displayMode = getDisplayMode(text)
@@ -198,9 +199,49 @@ function DisplayStage({
         ? `clamp(1.75rem, ${Math.max(fontSize / 18, 4.5)}vw, ${Math.min(fontSize, 96)}px)`
         : `clamp(2rem, ${fontSize / 10}vw, ${fontSize}px)`
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const target = event.target
+
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLButtonElement ||
+        target instanceof HTMLSelectElement
+      ) {
+        return
+      }
+
+      const element = textRef.current
+      if (!element) return
+
+      const pageDistance = element.clientHeight * 0.86
+      const lineDistance = 96
+      const keyActions: Record<string, () => void> = {
+        PageDown: () => element.scrollBy({ top: pageDistance, behavior: 'smooth' }),
+        PageUp: () => element.scrollBy({ top: -pageDistance, behavior: 'smooth' }),
+        ArrowDown: () => element.scrollBy({ top: lineDistance, behavior: 'smooth' }),
+        ArrowUp: () => element.scrollBy({ top: -lineDistance, behavior: 'smooth' }),
+        Home: () => element.scrollTo({ top: 0, behavior: 'smooth' }),
+        End: () => element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' }),
+      }
+      const action = keyActions[event.key]
+
+      if (!action) return
+
+      event.preventDefault()
+      action()
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   return (
     <main className="display-stage" aria-label="抄写展示区">
       <div
+        ref={textRef}
+        tabIndex={0}
         className={`display-text ${displayMode} ${text.trim().length === 0 ? 'placeholder' : ''}`}
         style={{
           color: hasText ? textColor : isDarkMode ? '#94a3b8' : '#9ca3af',
@@ -504,6 +545,7 @@ function LocalMode() {
 
 function DisplayRoomMode() {
   const [roomId, setRoomId] = useState('')
+  const [displayControlToken, setDisplayControlToken] = useState('')
   const [pairCode, setPairCode] = useState('')
   const [pairCodeExpiresAt, setPairCodeExpiresAt] = useState('')
   const [controllerConnected, setControllerConnected] = useState(false)
@@ -511,6 +553,8 @@ function DisplayRoomMode() {
   const [state, setState] = useState<RoomState>(defaultState)
   const [status, setStatus] = useState('正在创建展示房间...')
   const [pairQrCode, setPairQrCode] = useState('')
+  const [showSettings, setShowSettings] = useState(false)
+  const displayPatchSeqRef = useRef(0)
 
   useBodyTheme(state.isDarkMode)
 
@@ -521,6 +565,7 @@ function DisplayRoomMode() {
       try {
         const response = await apiRequest<{
           roomId: string
+          controlToken?: string
           pairCode: string
           pairCodeExpiresAt: string
           state: RoomState
@@ -529,6 +574,7 @@ function DisplayRoomMode() {
         if (cancelled) return
 
         setRoomId(response.roomId)
+        setDisplayControlToken(response.controlToken ?? '')
         setPairCode(response.pairCode)
         setPairCodeExpiresAt(response.pairCodeExpiresAt)
         setState(response.state)
@@ -608,6 +654,36 @@ function DisplayRoomMode() {
     }
   }, [pairCode])
 
+  async function updateDisplayState(patch: Partial<RoomState>) {
+    const nextState = {
+      ...state,
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    }
+    const sequence = displayPatchSeqRef.current + 1
+
+    displayPatchSeqRef.current = sequence
+    setState(nextState)
+
+    if (!roomId || !displayControlToken) return
+
+    try {
+      const response = await apiRequest<{ state: RoomState }>(`/api/rooms/${roomId}`, {
+        method: 'PATCH',
+        headers: {
+          'x-showme-control-token': displayControlToken,
+        },
+        body: JSON.stringify({ state: patch }),
+      })
+
+      if (displayPatchSeqRef.current === sequence) {
+        setState(response.state)
+      }
+    } catch {
+      setStatus('显示设置未同步')
+    }
+  }
+
   return (
     <div className={`app-container ${state.isDarkMode ? 'dark-mode' : 'light-mode'}`}>
       <button className="back-button" type="button" onClick={() => navigateTo('')}>
@@ -644,6 +720,34 @@ function DisplayRoomMode() {
       )}
 
       {hasControllerEverConnected && <div className="sync-badge">{controllerConnected ? '手机已连接' : '显示中'}</div>}
+      {hasControllerEverConnected && (
+        <div className="display-settings-surface">
+          {showSettings && (
+            <SettingsSheet
+              fontSize={state.fontSize}
+              fontFamily={state.fontFamily}
+              textColor={state.textColor}
+              isDarkMode={state.isDarkMode}
+              onFontSizeChange={(fontSize) => updateDisplayState({ fontSize })}
+              onFontFamilyChange={(fontFamily) => updateDisplayState({ fontFamily })}
+              onTextColorChange={(textColor) => updateDisplayState({ textColor })}
+              onThemeChange={(isDarkMode) =>
+                updateDisplayState({
+                  isDarkMode,
+                  textColor: isDarkMode ? '#f8fafc' : '#111827',
+                })
+              }
+            />
+          )}
+          <button
+            className={`display-settings-button ${showSettings ? 'active' : ''}`}
+            type="button"
+            onClick={() => setShowSettings((current) => !current)}
+          >
+            设置
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -165,7 +165,7 @@ async function createStorageRoom() {
 
   await client.createEntity(room)
 
-  return room
+  return { room, controlToken }
 }
 
 async function getStorageRoom(roomId) {
@@ -243,7 +243,7 @@ function createMemoryRoom() {
   memoryRooms.set(roomId, room)
   memoryPairCodeToRoomId.set(pairCode, roomId)
 
-  return room
+  return { room, controlToken }
 }
 
 function getMemoryRoom(roomId) {
@@ -278,9 +278,12 @@ module.exports = async function roomsApi(context, req) {
 
   try {
     if (method === 'POST' && segments.length === 0) {
-      const room = await createStorageRoom()
+      const { room, controlToken } = await createStorageRoom()
 
-      context.res = json(201, publicRoom(room))
+      context.res = json(201, {
+        ...publicRoom(room),
+        controlToken,
+      })
       return
     }
 

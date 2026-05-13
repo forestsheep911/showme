@@ -16,7 +16,7 @@
 .display-stage {
   min-height: 100vh;
   min-height: 100svh;
-  padding: max(20px, env(safe-area-inset-top)) clamp(18px, 4vw, 56px)
+  padding: max(16px, env(safe-area-inset-top)) clamp(10px, 2vw, 28px)
     calc(132px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   display: grid;
@@ -24,7 +24,7 @@
 }
 
 .display-text {
-  width: min(100%, 1120px);
+  width: 100%;
   max-height: calc(100vh - 170px);
   max-height: calc(100svh - 170px);
   overflow: auto;
@@ -36,7 +36,7 @@
   letter-spacing: 0;
   font-weight: 500;
   text-wrap: balance;
-  scrollbar-width: none;
+  scrollbar-width: auto;
 }
 
 .display-text.single {
@@ -60,14 +60,18 @@
 }
 
 .display-text::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
+  width: 12px;
+  height: 12px;
 }
 
 .display-text::-webkit-scrollbar-thumb {
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.18);
+}
+
+.display-text::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.06);
+  border-radius: 999px;
 }
 
 .dark-mode .display-text::-webkit-scrollbar-thumb {
@@ -134,6 +138,55 @@
   z-index: 20;
 }
 
+.display-settings-surface {
+  position: fixed;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: min(calc(100% - 28px), 560px);
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  z-index: 24;
+}
+
+.display-settings-surface .settings-sheet {
+  width: 100%;
+  max-height: min(52vh, 430px);
+}
+
+.display-settings-button {
+  min-height: 42px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 6px;
+  padding: 0 16px;
+  color: #111827;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(14px);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.display-settings-button.active {
+  color: #ffffff;
+  border-color: #2563eb;
+  background: #2563eb;
+}
+
+.dark-mode .display-settings-button {
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(15, 23, 42, 0.92);
+}
+
+.dark-mode .display-settings-button.active {
+  color: #0f172a;
+  border-color: #93c5fd;
+  background: #93c5fd;
+}
+
 .mode-launcher {
   top: max(14px, env(safe-area-inset-top));
   left: max(14px, env(safe-area-inset-left));
@@ -178,7 +231,7 @@
 
 .sync-badge {
   right: max(14px, env(safe-area-inset-right));
-  bottom: max(14px, env(safe-area-inset-bottom));
+  top: max(14px, env(safe-area-inset-top));
   display: grid;
   place-items: center;
 }
@@ -621,6 +674,12 @@
 
   .display-text {
     max-height: calc(100svh - 150px);
+  }
+
+  .display-settings-surface {
+    left: 14px;
+    right: 14px;
+    width: auto;
   }
 
   .toolbar {

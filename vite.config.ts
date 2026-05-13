@@ -128,7 +128,7 @@ function createRoom() {
   rooms.set(roomId, room);
   pairCodeToRoomId.set(pairCode, roomId);
 
-  return room;
+  return { room, controlToken };
 }
 
 function getControllerConnected(room: Room) {
@@ -182,10 +182,11 @@ async function handleRoomsApi(req: IncomingMessage, res: ServerResponse, next: (
 
   try {
     if (method === 'POST' && url.pathname === '/api/rooms') {
-      const room = createRoom();
+      const { room, controlToken } = createRoom();
 
       sendJson(res, 201, {
         roomId: room.roomId,
+        controlToken,
         pairCode: room.pairCode,
         pairCodeExpiresAt: room.pairCodeExpiresAt,
         roomExpiresAt: room.roomExpiresAt,
