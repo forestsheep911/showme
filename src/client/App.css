@@ -368,7 +368,8 @@
 .button-row button:focus-visible,
 .segmented-control button:focus-visible,
 .color-swatch:focus-visible,
-.editor-textarea:focus-visible {
+.editor-textarea:focus-visible,
+.controller-text-editor:focus-visible {
   outline: 3px solid #f59e0b;
   outline-offset: 2px;
 }
@@ -661,6 +662,42 @@
   color: #64748b;
 }
 
+.controller-text-editor {
+  width: 100%;
+  min-height: clamp(220px, 46svh, 420px);
+  max-height: clamp(220px, 52svh, 460px);
+  overflow: auto;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 6px;
+  padding: 12px 14px;
+  color: #111827;
+  background: rgba(255, 255, 255, 0.86);
+  font: inherit;
+  font-size: 20px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.controller-text-editor:empty::before {
+  color: #9ca3af;
+  content: attr(data-placeholder);
+  pointer-events: none;
+}
+
+.dark-mode .controller-text-editor {
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(2, 6, 23, 0.72);
+}
+
+.dark-mode .controller-text-editor:empty::before {
+  color: #64748b;
+}
+
 .control-page .editor-panel {
   padding: 0;
   border: none;
@@ -801,6 +838,11 @@
 
   .controller-input-preview {
     min-height: clamp(240px, 50svh, 420px);
+  }
+
+  .controller-text-editor {
+    min-height: clamp(240px, 50svh, 420px);
+    max-height: clamp(240px, 56svh, 460px);
   }
 
   .mode-launcher {

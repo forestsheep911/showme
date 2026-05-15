@@ -323,6 +323,74 @@ function EditorPanel({
   )
 }
 
+function ControllerTextEditor({
+  text,
+  onTextChange,
+}: {
+  text: string
+  onTextChange: (value: string) => void
+}) {
+  const editorRef = useRef<HTMLDivElement>(null)
+  const isComposingRef = useRef(false)
+  const initialTextRef = useRef(text)
+
+  useEffect(() => {
+    const editor = editorRef.current
+
+    if (!editor || isComposingRef.current || editor.innerText === text) return
+
+    editor.innerText = text
+  }, [text])
+
+  useEffect(() => {
+    const editor = editorRef.current
+
+    if (!editor) return
+
+    editor.innerText = initialTextRef.current
+    editor.focus()
+
+    const selection = window.getSelection()
+    const range = document.createRange()
+
+    range.selectNodeContents(editor)
+    range.collapse(false)
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  }, [])
+
+  function emitChange() {
+    const nextText = editorRef.current?.innerText ?? ''
+
+    onTextChange(nextText.replace(/\n$/, ''))
+  }
+
+  return (
+    <div className="editor-panel">
+      <div
+        ref={editorRef}
+        className="controller-text-editor"
+        contentEditable="plaintext-only"
+        role="textbox"
+        aria-label="编辑展示文字"
+        aria-multiline="true"
+        data-placeholder={placeholderText}
+        suppressContentEditableWarning
+        onInput={() => {
+          if (!isComposingRef.current) emitChange()
+        }}
+        onCompositionStart={() => {
+          isComposingRef.current = true
+        }}
+        onCompositionEnd={() => {
+          isComposingRef.current = false
+          emitChange()
+        }}
+      />
+    </div>
+  )
+}
+
 function Toolbar({
   isEditing,
   hasText,
@@ -1056,7 +1124,7 @@ function ControlRoomMode({ roomId }: { roomId: string }) {
       <main className="control-page">
         <section className="controller-card" aria-label="展示控制">
           {isEditingText ? (
-            <EditorPanel
+            <ControllerTextEditor
               text={state.text}
               onTextChange={(text) => updateState({ text })}
             />
