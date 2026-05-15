@@ -119,6 +119,48 @@
   font-size: clamp(1.55rem, 5.4vw, 3.25rem);
 }
 
+.home-more {
+  justify-self: center;
+  width: min(100%, 360px);
+  color: #64748b;
+  text-align: center;
+}
+
+.home-more summary {
+  min-height: 44px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 18px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+
+.home-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.home-more[open] summary {
+  color: #334155;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.home-more button {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 6px;
+  color: #334155;
+  background: rgba(255, 255, 255, 0.9);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 .control-surface {
   position: fixed;
   left: 50%;

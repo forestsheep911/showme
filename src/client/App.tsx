@@ -101,7 +101,7 @@ function parseRoute(): Route {
   if (params.get('mode') === 'control') return { view: 'controlPair' }
   if (params.get('mode') === 'home') return { view: 'home' }
 
-  return { view: 'local' }
+  return { view: 'home' }
 }
 
 function navigateTo(search: string) {
@@ -451,7 +451,7 @@ function ModeLauncher() {
   return (
     <div className="mode-launcher" aria-label="模式入口">
       <button type="button" onClick={() => navigateTo('')}>
-        本机展示
+        入口
       </button>
       <button type="button" onClick={() => navigateTo('?mode=display')}>
         大屏展示
@@ -470,15 +470,18 @@ function HomeMode() {
     <div className="app-container light-mode">
       <main className="home-page" aria-label="ShowMe 入口">
         <section className="home-actions">
-          <button className="home-action primary" type="button" onClick={() => navigateTo('')}>
-            本机展示
-          </button>
-          <button className="home-action" type="button" onClick={() => navigateTo('?mode=display')}>
+          <button className="home-action primary" type="button" onClick={() => navigateTo('?mode=display')}>
             大屏展示
           </button>
           <button className="home-action" type="button" onClick={() => navigateTo('?mode=control')}>
             手机控制大屏
           </button>
+          <details className="home-more">
+            <summary>更多功能</summary>
+            <button type="button" onClick={() => navigateTo('?mode=local')}>
+              本机展示
+            </button>
+          </details>
         </section>
       </main>
     </div>
