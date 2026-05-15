@@ -115,6 +115,10 @@
   background: #2563eb;
 }
 
+.home-action:not(.primary) {
+  font-size: clamp(1.55rem, 5.4vw, 3.25rem);
+}
+
 .control-surface {
   position: fixed;
   left: 50%;
@@ -579,8 +583,40 @@
 
 .controller-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+}
+
+.controller-input-preview {
+  width: 100%;
+  min-height: clamp(220px, 46svh, 420px);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 6px;
+  padding: 16px;
+  color: #111827;
+  background: rgba(255, 255, 255, 0.86);
+  font: inherit;
+  font-size: 20px;
+  line-height: 1.5;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  cursor: text;
+}
+
+.controller-input-preview.empty {
+  color: #9ca3af;
+}
+
+.dark-mode .controller-input-preview {
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(2, 6, 23, 0.72);
+}
+
+.dark-mode .controller-input-preview.empty {
+  color: #64748b;
 }
 
 .control-page .editor-panel {
@@ -715,6 +751,14 @@
   .control-page .editor-textarea {
     min-height: clamp(240px, 50svh, 420px);
     max-height: clamp(240px, 56svh, 460px);
+  }
+
+  .controller-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .controller-input-preview {
+    min-height: clamp(240px, 50svh, 420px);
   }
 
   .mode-launcher {

@@ -99,8 +99,9 @@ function parseRoute(): Route {
   if (params.get('mode') === 'local') return { view: 'local' }
   if (params.get('mode') === 'display') return { view: 'display' }
   if (params.get('mode') === 'control') return { view: 'controlPair' }
+  if (params.get('mode') === 'home') return { view: 'home' }
 
-  return { view: 'home' }
+  return { view: 'local' }
 }
 
 function navigateTo(search: string) {
@@ -258,17 +259,21 @@ function DisplayStage({
 function EditorPanel({
   text,
   onTextChange,
+  autoFocus = true,
 }: {
   text: string
   onTextChange: (value: string) => void
+  autoFocus?: boolean
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const isComposingRef = useRef(false)
   const [draftText, setDraftText] = useState(text)
 
   useEffect(() => {
+    if (!autoFocus) return
+
     textareaRef.current?.focus()
-  }, [])
+  }, [autoFocus])
 
   useEffect(() => {
     if (!isComposingRef.current) {
@@ -445,11 +450,14 @@ function SettingsSheet({
 function ModeLauncher() {
   return (
     <div className="mode-launcher" aria-label="模式入口">
+      <button type="button" onClick={() => navigateTo('')}>
+        本机展示
+      </button>
       <button type="button" onClick={() => navigateTo('?mode=display')}>
-        新建展示房间
+        大屏展示
       </button>
       <button type="button" onClick={() => navigateTo('?mode=control')}>
-        连接展示屏
+        手机控制大屏
       </button>
     </div>
   )
@@ -462,11 +470,14 @@ function HomeMode() {
     <div className="app-container light-mode">
       <main className="home-page" aria-label="ShowMe 入口">
         <section className="home-actions">
-          <button className="home-action primary" type="button" onClick={() => navigateTo('?mode=display')}>
-            新建展示房间
+          <button className="home-action primary" type="button" onClick={() => navigateTo('')}>
+            本机展示
+          </button>
+          <button className="home-action" type="button" onClick={() => navigateTo('?mode=display')}>
+            大屏展示
           </button>
           <button className="home-action" type="button" onClick={() => navigateTo('?mode=control')}>
-            连接展示屏
+            手机控制大屏
           </button>
         </section>
       </main>
@@ -687,7 +698,7 @@ function DisplayRoomMode() {
   return (
     <div className={`app-container ${state.isDarkMode ? 'dark-mode' : 'light-mode'}`}>
       <button className="back-button" type="button" onClick={() => navigateTo('')}>
-        返回本机模式
+        返回本机展示
       </button>
       <DisplayStage
         text={state.text}
@@ -810,7 +821,7 @@ function ControlPairMode() {
       </button>
       <main className="pair-control-page">
         <section className="pair-control-card" aria-label="连接展示屏">
-          <p className="eyebrow">连接展示屏</p>
+          <p className="eyebrow">手机控制大屏</p>
           <h1>输入大屏上的 6 位配对码</h1>
           <input
             className="pair-input"
@@ -974,6 +985,7 @@ function ControlRoomMode({ roomId }: { roomId: string }) {
   const token = sessionStorage.getItem(`showme-control-${roomId}`) ?? ''
   const [state, setState] = useState<RoomState>(defaultState)
   const [showSettings, setShowSettings] = useState(false)
+  const [isEditingText, setIsEditingText] = useState(false)
   const [status, setStatus] = useState(token ? '已连接' : '缺少控制权限，请重新配对')
   const dirtyRef = useRef(false)
 
@@ -1040,10 +1052,30 @@ function ControlRoomMode({ roomId }: { roomId: string }) {
       </button>
       <main className="control-page">
         <section className="controller-card" aria-label="展示控制">
-          <EditorPanel text={state.text} onTextChange={(text) => updateState({ text })} />
+          {isEditingText ? (
+            <EditorPanel
+              text={state.text}
+              onTextChange={(text) => updateState({ text })}
+            />
+          ) : (
+            <button
+              className={`controller-input-preview ${state.text.trim() ? '' : 'empty'}`}
+              type="button"
+              onClick={() => setIsEditingText(true)}
+            >
+              {state.text.trim() || placeholderText}
+            </button>
+          )}
           <div className="controller-actions">
             <button className="tool-button" type="button" onClick={() => updateState({ text: '' })}>
               清空
+            </button>
+            <button
+              className={`tool-button ${isEditingText ? 'active' : ''}`}
+              type="button"
+              onClick={() => setIsEditingText((current) => !current)}
+            >
+              {isEditingText ? '完成输入' : '编辑文字'}
             </button>
             <button className="tool-button" type="button" onClick={() => setShowSettings((current) => !current)}>
               {showSettings ? '收起设置' : '显示设置'}
