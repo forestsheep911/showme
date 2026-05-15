@@ -317,6 +317,7 @@ type UpdateRoomResponse = {
 
 - Vite 开发/预览服务内置 `/api/rooms` 内存房间 API。
 - 展示端可以新建房间并显示 6 位配对码。
+- 展示端创建成功后进入 `/?room=<roomId>`，同一台展示设备刷新时会继续打开该房间。
 - 手机控制端可以输入配对码，获得控制 token。
 - 控制端可以同步文字、字号、字体、颜色和主题。
 - 展示端通过轮询读取房间状态。
@@ -324,6 +325,7 @@ type UpdateRoomResponse = {
 限制：
 
 - 当前房间存储在 Node 进程内存里，服务重启后会丢失。
+- 只有创建房间的展示页会在当前浏览器会话里保留配对码和展示端控制 token；其他设备直接打开 `/?room=<roomId>` 目前只作为被动展示读取。
 - 当前实现适合本地验证和原型演示，部署到 Azure Static Web Apps 生产环境前仍需接入 Functions API 和 Azure Table Storage。
 
 ## 实施阶段

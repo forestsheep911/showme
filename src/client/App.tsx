@@ -30,6 +30,7 @@ type Route =
   | { view: 'home' }
   | { view: 'local' }
   | { view: 'display' }
+  | { view: 'displayRoom'; roomId: string }
   | { view: 'controlPair' }
   | { view: 'controlRoom'; roomId: string }
 
@@ -93,8 +94,10 @@ const defaultState: RoomState = {
 
 function parseRoute(): Route {
   const params = new URLSearchParams(window.location.search)
+  const displayRoomId = params.get('room')
   const controlRoomId = params.get('control')
 
+  if (displayRoomId) return { view: 'displayRoom', roomId: displayRoomId }
   if (controlRoomId) return { view: 'controlRoom', roomId: controlRoomId }
   if (params.get('mode') === 'local') return { view: 'local' }
   if (params.get('mode') === 'display') return { view: 'display' }
@@ -106,6 +109,11 @@ function parseRoute(): Route {
 
 function navigateTo(search: string) {
   window.history.pushState(null, '', `${window.location.pathname}${search}`)
+  window.dispatchEvent(new PopStateEvent('popstate'))
+}
+
+function replaceRoute(search: string) {
+  window.history.replaceState(null, '', `${window.location.pathname}${search}`)
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
@@ -625,15 +633,53 @@ function LocalMode() {
   )
 }
 
-function DisplayRoomMode() {
-  const [roomId, setRoomId] = useState('')
-  const [displayControlToken, setDisplayControlToken] = useState('')
-  const [pairCode, setPairCode] = useState('')
-  const [pairCodeExpiresAt, setPairCodeExpiresAt] = useState('')
+function getDisplaySessionKey(roomId: string) {
+  return `showme-display-${roomId}`
+}
+
+function getStoredDisplayRoom(roomId: string) {
+  try {
+    const rawValue = sessionStorage.getItem(getDisplaySessionKey(roomId))
+
+    if (!rawValue) return { controlToken: '', pairCode: '', pairCodeExpiresAt: '' }
+
+    const value = JSON.parse(rawValue) as Partial<{
+      controlToken: string
+      pairCode: string
+      pairCodeExpiresAt: string
+    }>
+
+    return {
+      controlToken: value.controlToken ?? '',
+      pairCode: value.pairCode ?? '',
+      pairCodeExpiresAt: value.pairCodeExpiresAt ?? '',
+    }
+  } catch {
+    return { controlToken: '', pairCode: '', pairCodeExpiresAt: '' }
+  }
+}
+
+function storeDisplayRoom(
+  roomId: string,
+  value: {
+    controlToken: string
+    pairCode: string
+    pairCodeExpiresAt: string
+  },
+) {
+  sessionStorage.setItem(getDisplaySessionKey(roomId), JSON.stringify(value))
+}
+
+function DisplayRoomMode({ initialRoomId = '' }: { initialRoomId?: string }) {
+  const storedDisplayRoom = initialRoomId ? getStoredDisplayRoom(initialRoomId) : undefined
+  const [roomId, setRoomId] = useState(initialRoomId)
+  const [displayControlToken, setDisplayControlToken] = useState(storedDisplayRoom?.controlToken ?? '')
+  const [pairCode, setPairCode] = useState(storedDisplayRoom?.pairCode ?? '')
+  const [pairCodeExpiresAt, setPairCodeExpiresAt] = useState(storedDisplayRoom?.pairCodeExpiresAt ?? '')
   const [controllerConnected, setControllerConnected] = useState(false)
   const [hasControllerEverConnected, setHasControllerEverConnected] = useState(false)
   const [state, setState] = useState<RoomState>(defaultState)
-  const [status, setStatus] = useState('正在创建展示房间...')
+  const [status, setStatus] = useState(initialRoomId ? '正在打开展示房间...' : '正在创建展示房间...')
   const [pairQrCode, setPairQrCode] = useState('')
   const [showSettings, setShowSettings] = useState(false)
   const displayPatchSeqRef = useRef(0)
@@ -641,6 +687,8 @@ function DisplayRoomMode() {
   useBodyTheme(state.isDarkMode)
 
   useEffect(() => {
+    if (initialRoomId) return undefined
+
     let cancelled = false
 
     async function createRoom() {
@@ -661,6 +709,12 @@ function DisplayRoomMode() {
         setPairCodeExpiresAt(response.pairCodeExpiresAt)
         setState(response.state)
         setStatus('等待手机连接')
+        storeDisplayRoom(response.roomId, {
+          controlToken: response.controlToken ?? '',
+          pairCode: response.pairCode,
+          pairCodeExpiresAt: response.pairCodeExpiresAt,
+        })
+        replaceRoute(`?room=${encodeURIComponent(response.roomId)}`)
       } catch (error) {
         if (!cancelled) setStatus(error instanceof Error ? error.message : '房间创建失败')
       }
@@ -671,7 +725,7 @@ function DisplayRoomMode() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [initialRoomId])
 
   useEffect(() => {
     if (!roomId) return undefined
@@ -692,7 +746,7 @@ function DisplayRoomMode() {
         if (response.controllerConnected) {
           setHasControllerEverConnected(true)
         }
-        setStatus(response.controllerConnected ? '手机已连接' : '等待手机连接')
+        setStatus(response.controllerConnected ? '手机已连接' : pairCode ? '等待手机连接' : '展示房间已打开')
       } catch (error) {
         if (!cancelled) setStatus(error instanceof Error ? error.message : '同步失败')
       }
@@ -705,7 +759,7 @@ function DisplayRoomMode() {
       cancelled = true
       window.clearInterval(timer)
     }
-  }, [roomId])
+  }, [roomId, pairCode])
 
   useEffect(() => {
     if (!pairCode) {
@@ -780,7 +834,7 @@ function DisplayRoomMode() {
         emptyText=""
       />
 
-      {!hasControllerEverConnected && (
+      {!hasControllerEverConnected && pairCode && (
         <section className="pairing-card" aria-label="展示房间配对码">
           <div className="pairing-layout">
             <div>
@@ -801,7 +855,9 @@ function DisplayRoomMode() {
         </section>
       )}
 
-      {hasControllerEverConnected && <div className="sync-badge">{controllerConnected ? '手机已连接' : '显示中'}</div>}
+      {(hasControllerEverConnected || !pairCode) && (
+        <div className="sync-badge">{controllerConnected ? '手机已连接' : status}</div>
+      )}
       {hasControllerEverConnected && (
         <div className="display-settings-surface">
           {showSettings && (
@@ -1215,6 +1271,7 @@ function App() {
   }, [])
 
   if (route.view === 'display') return <DisplayRoomMode />
+  if (route.view === 'displayRoom') return <DisplayRoomMode initialRoomId={route.roomId} />
   if (route.view === 'controlPair') return <ControlPairMode />
   if (route.view === 'controlRoom') return <ControlRoomMode roomId={route.roomId} />
   if (route.view === 'local') return <LocalMode />
